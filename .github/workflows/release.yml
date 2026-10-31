@@ -1,64 +1,84 @@
 name: Release
 
+# Publishes a GitHub release for the version in gradle.properties if it does not exist yet,
+# then points patches-bundle.json at it. Morphe Manager reads patches-bundle.json from main
+# and downloads the bundle from its download_url. Bump the version to publish an update.
+
 on:
   workflow_dispatch:
   push:
     branches:
       - main
-      - dev
+    paths-ignore:
+      - "patches-bundle.json"
+      - "**.md"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 jobs:
   release:
     name: Release
-    permissions:
-      contents: write
-      packages: write
-      id-token: write
-      attestations: write
     runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Read version
+        id: version
+        run: |
+          version=$(sed -n 's/^version *= *//p' gradle.properties | tr -d '[:space:]')
+          test -n "$version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if gh release view "v$version" > /dev/null 2>&1; then
+            echo "Release v$version already exists. Bump version in gradle.properties to publish."
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Setup Java
+        if: steps.version.outputs.exists != 'true'
         uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '17'
 
       - name: Cache Gradle
+        if: steps.version.outputs.exists != 'true'
         uses: burrunan/gradle-cache-action@v3
 
       - name: Build
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./gradlew :patches:buildAndroid generatePatchesList clean
+        if: steps.version.outputs.exists != 'true'
+        run: ./gradlew :patches:buildAndroid --no-daemon
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 'lts/*'
-          cache: 'npm'
+      - name: Publish release
+        if: steps.version.outputs.exists != 'true'
+        run: |
+          version=${{ steps.version.outputs.version }}
+          bundle=$(find patches/build/libs -name 'patches-*.mpp' ! -name '*sources*' ! -name '*javadoc*' | head -n 1)
+          test -n "$bundle"
+          cp "$bundle" "patches-$version.mpp"
+          gh release create "v$version" "patches-$version.mpp" \
+            --title "v$version" \
+            --notes "Jeddit $version for Boost for Reddit."
 
-      - name: Install dependencies
-        run: npm install
-
-      - name: Import GPG key
-        uses: crazy-max/ghaction-import-gpg@v6
-        with:
-          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
-          passphrase: ${{ secrets.GPG_PASSPHRASE }}
-          fingerprint: ${{ vars.GPG_FINGERPRINT }}
-
-      - name: Release
-        uses: cycjimmy/semantic-release-action@v5
-        id: release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Attest
-        if: steps.release.outputs.new_release_published == 'true'
-        uses: actions/attest-build-provenance@v3
-        with:
-          subject-name: 'Jeddit ${{ steps.release.outputs.new_release_git_tag }}'
-          subject-path: patches/build/libs/patches-*.mpp
+      - name: Update patches-bundle.json
+        if: steps.version.outputs.exists != 'true'
+        run: |
+          version=${{ steps.version.outputs.version }}
+          jq -n \
+            --arg created "$(date -u +%Y-%m-%dT%H:%M:%S)" \
+            --arg url "https://github.com/${{ github.repository }}/releases/download/v$version/patches-$version.mpp" \
+            --arg version "$version" \
+            '{created_at: $created, description: "Jeddit \($version) for Boost for Reddit.", download_url: $url, version: $version}' \
+            > patches-bundle.json
+          if git diff --quiet patches-bundle.json; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: Release v$version [skip ci]" patches-bundle.json
+          git push
