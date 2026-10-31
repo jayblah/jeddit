@@ -31,8 +31,9 @@ import okhttp3.Response;
 import okhttp3.ResponseBody;
 
 /**
- * Adds decoded NATO and binary blocks to comments in Reddit responses. Only body_html is
- * rewritten: Boost displays it, while copying and editing keep using the original body.
+ * Adds decoded NATO and binary blocks to comments and posts in Reddit responses. Only the
+ * body_html and selftext_html fields are rewritten: Boost displays them, while copying and
+ * editing keep using the original Markdown.
  *
  * @noinspection unused
  */
@@ -70,9 +71,9 @@ public final class CommentDecoderInterceptor extends PatchInterceptor {
         String json = body.string();
         String patched = json;
         try {
-            patched = decodeComments(json, "1".equals(request.url().queryParameter("raw_json")));
+            patched = decodeThings(json, "1".equals(request.url().queryParameter("raw_json")));
         } catch (JSONException | RuntimeException ex) {
-            Logger.printException(() -> "Failed to decode comments in " + request.url().encodedPath(), ex);
+            Logger.printException(() -> "Failed to decode " + request.url().encodedPath(), ex);
         }
         return response.newBuilder()
                 .removeHeader("Content-Length")
@@ -88,7 +89,7 @@ public final class CommentDecoderInterceptor extends PatchInterceptor {
                 || path.equals("/api/info");
     }
 
-    private static String decodeComments(String json, boolean rawJson) throws JSONException {
+    private static String decodeThings(String json, boolean rawJson) throws JSONException {
         Object root = new JSONTokener(json).nextValue();
         boolean changed = false;
         // Iterative, so deep reply trees cannot overflow the stack.
@@ -101,9 +102,12 @@ public final class CommentDecoderInterceptor extends PatchInterceptor {
                 for (int i = 0; i < array.length(); i++) pending.push(array.get(i));
             } else if (node instanceof JSONObject) {
                 JSONObject object = (JSONObject) node;
-                if ("t1".equals(object.optString("kind"))) {
-                    JSONObject data = object.optJSONObject("data");
-                    if (data != null) changed |= decodeComment(data, rawJson);
+                String kind = object.optString("kind");
+                JSONObject data = object.optJSONObject("data");
+                if (data != null) {
+                    // t1 is a comment, t3 a post.
+                    if ("t1".equals(kind)) changed |= decodeText(data, "body", rawJson);
+                    else if ("t3".equals(kind)) changed |= decodeText(data, "selftext", rawJson);
                 }
                 for (Iterator<String> keys = object.keys(); keys.hasNext(); ) {
                     pending.push(object.get(keys.next()));
@@ -113,15 +117,18 @@ public final class CommentDecoderInterceptor extends PatchInterceptor {
         return changed ? root.toString() : json;
     }
 
-    private static boolean decodeComment(JSONObject data, boolean rawJson) throws JSONException {
-        if (data.isNull("body") || !isAllowedSubreddit(data.optString("subreddit"))) return false;
-        String body = data.getString("body");
-        // Without raw_json, Reddit entity-escapes these three characters in body.
-        if (!rawJson) body = body.replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&");
+    /**
+     * Decodes a Markdown field and rewrites its "_html" twin, which is what Boost displays.
+     */
+    private static boolean decodeText(JSONObject data, String field, boolean rawJson) throws JSONException {
+        if (data.isNull(field) || !isAllowedSubreddit(data.optString("subreddit"))) return false;
+        String markdown = data.getString(field);
+        // Without raw_json, Reddit entity-escapes these three characters in Markdown fields.
+        if (!rawJson) markdown = markdown.replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&");
 
-        String annotated = CommentDecoder.annotate(body);
-        if (annotated.equals(body)) return false;
-        data.put("body_html", MarkdownRenderer.render(annotated));
+        String annotated = CommentDecoder.annotate(markdown);
+        if (annotated.equals(markdown)) return false;
+        data.put(field + "_html", MarkdownRenderer.render(annotated));
         return true;
     }
 

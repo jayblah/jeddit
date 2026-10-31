@@ -274,7 +274,7 @@
     },
     {
       "name": "Decode NATO and binary comments",
-      "description": "Adds the decoded text of NATO phonetic spelling and 8-bit binary below the comment paragraph it appears in, with SimpCity and social media search links.",
+      "description": "Adds the decoded text of NATO phonetic spelling and 8-bit binary below the comment or post paragraph it appears in, with Copy, SimpCity and social media search links.",
       "default": false,
       "category": "Comments & posting",
       "compatiblePackages": [

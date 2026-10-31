@@ -31,9 +31,21 @@ public class CommentDecoderTest {
     @Test
     public void insertsBlockAfterMatchingParagraph() {
         String annotated = CommentDecoder.annotate("charlie delta echo\n\nnothing here");
-        assertTrue(annotated, annotated.startsWith("charlie delta echo\n\n> **NATO** `CDE` · [SimpCity]("));
+        assertTrue(annotated, annotated.startsWith(
+                "charlie delta echo\n\n> **NATO** `CDE`\n>\n> [📋 Copy](" + CommentDecoder.COPY_URL_PREFIX + "CDE)"));
+        assertTrue(annotated, annotated.contains(" · [◎ Title](") && annotated.contains(" · [◉ All](")
+                && annotated.contains(" · [🔍 Socials]("));
         assertTrue(annotated, annotated.endsWith("\n\nnothing here"));
         assertTrue(annotated, annotated.contains("&c%5Btitle_only%5D=1"));
+    }
+
+    @Test
+    public void copyLinksRoundTrip() {
+        String annotated = CommentDecoder.annotate("01001000 01101001 00100000 00100110");
+        int start = annotated.indexOf(CommentDecoder.COPY_URL_PREFIX);
+        String url = annotated.substring(start, annotated.indexOf(')', start));
+        assertEquals("Hi &", CommentDecoder.copyText(url));
+        assertNull(CommentDecoder.copyText("https://www.reddit.com/r/pics"));
     }
 
     @Test
