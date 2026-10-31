@@ -29,10 +29,12 @@ Jeddit is a derivative of [Patcheddit](https://github.com/wchill/patcheddit) and
     * **Use Reddit for image uploads** selects Reddit hosting for image posts and galleries, without changing editor attachments.
     * **Configure editor image hosting** adds an editor-hosting setting for Imgur Free or ImgBB. It does not change post or gallery hosting.
     * **Preview images in the editor** adds previews of supported image URLs without changing upload providers.
-* **Decode NATO and binary comments** adds the decoded text of NATO phonetic spelling (three or more code words) and 8-bit binary below the comment paragraph it appears in, with SimpCity and social media search links. Unlike other Boost patches, it is not selected by default and has no in-app toggle.
+* **Decode NATO and binary comments** adds the decoded text of NATO phonetic spelling (three or more code words) and 8-bit binary below the comment or post paragraph it appears in. Unlike other Boost patches, it is not selected by default and has no in-app toggle.
+    * Below the decoded text are four links: **📋 Copy** copies it, **◎ Title** searches SimpCity thread titles, **◉ All** searches all of SimpCity, and **🔍 Socials** runs a Google search across social media sites.
+    * Posts are decoded when you open them, not in feed previews.
     * The `Subreddits` option limits decoding to a comma-separated list of subreddits. Leave it empty to decode everywhere.
     * Number words such as "one" and "two" count as code words, so ordinary sentences can produce false matches outside the listed subreddits.
-    * Only the displayed comment changes. Copying or editing a comment uses its original text.
+    * Only the displayed text changes. Copying or editing a comment or post uses its original text.
 * The content of deleted Reddit posts and comments can be loaded from [Project Arctic Shift](https://github.com/ArthurHeitmann/arctic_shift).
     * This only works for text and images, and not all content can be restored. Videos are unlikely to be available.
     * Posts/comments that were deleted are marked as follows:

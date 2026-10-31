@@ -8,6 +8,7 @@
 package app.morphe.extension.boost.decoder;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -18,10 +19,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Finds NATO phonetic spelling and 8-bit binary in comment Markdown and appends the decoded
- * text, with search links, below the paragraph it appears in.
+ * Finds NATO phonetic spelling and 8-bit binary in comment and post Markdown and appends the
+ * decoded text, with Copy and search links, below the paragraph it appears in.
  */
 public final class CommentDecoder {
+    // A Reddit URL, so Boost hands taps to its navigation handler, where DecoderLinkHandler
+    // copies the text instead of opening the page.
+    static final String COPY_URL_PREFIX = "https://www.reddit.com/jeddit/copy?text=";
+
     private static final String[] SOCIAL_SITES = {
             "instagram.com",
             "tiktok.com",
@@ -116,10 +121,23 @@ public final class CommentDecoder {
         if (decoded.isEmpty() || !seen.add(label + ":" + decoded)) return false;
 
         out.append("\n\n> **").append(label).append("** ").append(codeSpan(decoded))
-                .append(" · [SimpCity](").append(simpCityUrl(decoded, true)).append(')')
-                .append(" · [SimpCity all](").append(simpCityUrl(decoded, false)).append(')')
-                .append(" · [Socials](").append(socialSearchUrl(decoded)).append(')');
+                .append("\n>\n> [📋 Copy](").append(COPY_URL_PREFIX).append(encode(decoded)).append(')')
+                .append(" · [◎ Title](").append(simpCityUrl(decoded, true)).append(')')
+                .append(" · [◉ All](").append(simpCityUrl(decoded, false)).append(')')
+                .append(" · [🔍 Socials](").append(socialSearchUrl(decoded)).append(')');
         return true;
+    }
+
+    /**
+     * Returns the text a Copy link carries, or null if the URL is not a Copy link.
+     */
+    public static String copyText(String url) {
+        if (url == null || !url.startsWith(COPY_URL_PREFIX)) return null;
+        try {
+            return URLDecoder.decode(url.substring(COPY_URL_PREFIX.length()), "UTF-8");
+        } catch (UnsupportedEncodingException | IllegalArgumentException ex) {
+            return null;
+        }
     }
 
     private static String codeSpan(String text) {
