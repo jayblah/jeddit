@@ -14,6 +14,6 @@ Include your Boost version and the patches you selected.
 ## 📝 Submitting changes
 
 1. Open an issue first to discuss the change.
-2. Fork the repository and create your branch from `dev`.
+2. Fork the repository and create your branch from `main`.
 3. Use [semantic commit messages](https://www.conventionalcommits.org/), for example `feat: ...` or `fix: ...`.
-4. Open a pull request against `dev` and reference the issue it closes.
+4. Open a pull request against `main` and reference the issue it closes.

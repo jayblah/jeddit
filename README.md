@@ -54,7 +54,7 @@ Jeddit is a derivative of [Patcheddit](https://github.com/wchill/patcheddit) and
 ## 🚀 Get started
 
 1. Install [Morphe Manager](https://morphe.software/) and switch it to advanced/expert mode.
-2. Click [this link](https://morphe.software/add-source?github=jayblah/jeddit) to add Jeddit as a patch source in Morphe Manager. This works once the repository has a published release.
+2. Click [this link](https://morphe.software/add-source?github=jayblah/jeddit), or add `https://github.com/jayblah/jeddit` as a patch source in Morphe Manager.
     * To try an unreleased build, run the **Build pull request** workflow from this repository's Actions tab on the branch you want. Download the `jeddit` artifact and add the `.mpp` file inside it to Morphe Manager as a local patch source.
 3. Get the APK for Boost for Reddit 1.14.1. APKM bundles (split APKs) also work.
 4. Select the patches you want, then patch.
@@ -114,10 +114,9 @@ I get a `null: null` error when I open the app
 
 ## 🧑‍💻 Development
 
-- Feature branches are squashed and merged into `dev`. `dev` is merged into `main` for release.
-- Versions follow semantic versioning, from semantic commit messages (`feat:`, `fix:`, ...).
-- Pushes to `dev` and `main` run [release.yml](.github/workflows/release.yml). It builds the bundle, updates the changelog, `patches-list.json` and `patches-bundle.json`, and publishes a GitHub release. It needs the `GPG_PRIVATE_KEY` and `GPG_PASSPHRASE` secrets and the `GPG_FINGERPRINT` variable to sign the bundle.
-- [build_pull_request.yml](.github/workflows/build_pull_request.yml) builds an unsigned bundle without releasing. Run it manually from the Actions tab, or open a pull request against `dev`.
+- Morphe Manager reads `patches-bundle.json` from `main` and downloads the bundle from its `download_url`.
+- To publish an update, bump `version` in `gradle.properties` and push to `main`. [release.yml](.github/workflows/release.yml) builds the bundle, publishes it as GitHub release `v<version>`, and points `patches-bundle.json` at it. Pushes that keep the same version publish nothing. Morphe Manager offers the update once `patches-bundle.json` has the new version.
+- [build_pull_request.yml](.github/workflows/build_pull_request.yml) builds a bundle without releasing. Run it manually from the Actions tab, or open a pull request against `main`.
 
 ### 🛠️ Building locally
 
