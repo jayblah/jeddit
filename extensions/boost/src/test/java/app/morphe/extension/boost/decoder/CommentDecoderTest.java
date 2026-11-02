@@ -32,9 +32,9 @@ public class CommentDecoderTest {
     public void insertsBlockAfterMatchingParagraph() {
         String annotated = CommentDecoder.annotate("charlie delta echo\n\nnothing here");
         assertTrue(annotated, annotated.startsWith(
-                "charlie delta echo\n\n> **NATO** `CDE`\n>\n> [📋 Copy](" + CommentDecoder.COPY_URL_PREFIX + "CDE)"));
-        assertTrue(annotated, annotated.contains(" · [◎ Title](") && annotated.contains(" · [◉ All](")
-                && annotated.contains(" · [🔍 Socials]("));
+                "charlie delta echo\n\n> **NATO** `CDE`\n>\n> [📋](" + CommentDecoder.COPY_URL_PREFIX + "CDE)"));
+        assertTrue(annotated, annotated.contains(" · [🏷️](") && annotated.contains(" · [🌐](")
+                && annotated.contains(" · [🔍]("));
         assertTrue(annotated, annotated.endsWith("\n\nnothing here"));
         assertTrue(annotated, annotated.contains("&c%5Btitle_only%5D=1"));
     }

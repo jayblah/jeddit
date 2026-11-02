@@ -30,7 +30,7 @@ Jeddit is a derivative of [Patcheddit](https://github.com/wchill/patcheddit) and
     * **Configure editor image hosting** adds an editor-hosting setting for Imgur Free or ImgBB. It does not change post or gallery hosting.
     * **Preview images in the editor** adds previews of supported image URLs without changing upload providers.
 * **Decode NATO and binary comments** adds the decoded text of NATO phonetic spelling (three or more code words) and 8-bit binary below the comment or post paragraph it appears in. Unlike other Boost patches, it is not selected by default and has no in-app toggle.
-    * Below the decoded text are four links: **📋 Copy** copies it, **◎ Title** searches SimpCity thread titles, **◉ All** searches all of SimpCity, and **🔍 Socials** runs a Google search across social media sites.
+    * Below the decoded text are four links: **📋** copies it, **🏷️** searches SimpCity thread titles, **🌐** searches all of SimpCity, and **🔍** runs a Google search across social media sites.
     * Posts are decoded when you open them, not in feed previews.
     * The `Subreddits` option limits decoding to a comma-separated list of subreddits. Leave it empty to decode everywhere.
     * Number words such as "one" and "two" count as code words, so ordinary sentences can produce false matches outside the listed subreddits.

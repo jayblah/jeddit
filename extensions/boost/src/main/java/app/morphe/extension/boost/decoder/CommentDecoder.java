@@ -121,10 +121,10 @@ public final class CommentDecoder {
         if (decoded.isEmpty() || !seen.add(label + ":" + decoded)) return false;
 
         out.append("\n\n> **").append(label).append("** ").append(codeSpan(decoded))
-                .append("\n>\n> [📋 Copy](").append(COPY_URL_PREFIX).append(encode(decoded)).append(')')
-                .append(" · [◎ Title](").append(simpCityUrl(decoded, true)).append(')')
-                .append(" · [◉ All](").append(simpCityUrl(decoded, false)).append(')')
-                .append(" · [🔍 Socials](").append(socialSearchUrl(decoded)).append(')');
+                .append("\n>\n> [📋](").append(COPY_URL_PREFIX).append(encode(decoded)).append(')')
+                .append(" · [🏷️](").append(simpCityUrl(decoded, true)).append(')')
+                .append(" · [🌐](").append(simpCityUrl(decoded, false)).append(')')
+                .append(" · [🔍](").append(socialSearchUrl(decoded)).append(')');
         return true;
     }
 
